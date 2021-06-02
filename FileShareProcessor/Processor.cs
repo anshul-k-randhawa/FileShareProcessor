@@ -7,36 +7,22 @@ using System.Threading.Tasks;
 
 namespace FileShareProcessor
 {
-    public class Processor
-    {
-        private readonly string _connectionString;
-        private readonly string _shareName;
-        private readonly string _directoryName;
-        private readonly string _destFilePath;
-        private readonly string _pattern;
-
-        public Processor(string connectionString, string shareName, string directoryName, string destFilePath, string pattern)
-        {
-            _connectionString = connectionString;
-            _shareName = shareName;
-            _directoryName = directoryName;
-            _destFilePath = destFilePath;
-            _pattern = pattern;
-        }
-        public async Task ProcessDirectoryAsync()
+    public static class Processor
+    {        
+        public static async Task ProcessDirectoryAsync(string connectionString, string shareName, string directoryName, string destFilePath, string pattern)
         {
             try
             {
                 var parallellism = ConfigurationManager.AppSettings["Parallelism"];
                 var exceptions = new ConcurrentQueue<Exception>();
                 // Instantiate a ShareClient which will be used to create and manipulate the file share
-                ShareClient share = new ShareClient(_connectionString, _shareName);
+                ShareClient share = new ShareClient(connectionString, shareName);
 
                 // Ensure that the share exists
                 if (await share.ExistsAsync())
                 {
                     // Get a reference to the sample directory
-                    ShareDirectoryClient directory = share.GetDirectoryClient(_directoryName);
+                    ShareDirectoryClient directory = share.GetDirectoryClient(directoryName);
 
                     // Ensure that the directory exists
                     if (await directory.ExistsAsync())
@@ -62,9 +48,8 @@ namespace FileShareProcessor
                                     ShareFileClient file = directory.GetFileClient(item.Name);
 
                                     if (file.Exists())
-                                    {
-                                        var fileHelper = new FileHelper(file, _connectionString, _shareName, _destFilePath, _pattern);
-                                        fileHelper.ProcessFile().Wait();
+                                    {  
+                                        FileHelper.ProcessFile(file, connectionString, shareName, destFilePath, pattern).Wait();
                                     }
                                 }
                             }

@@ -5,53 +5,39 @@ using System.Threading.Tasks;
 
 namespace FileShareProcessor.Helpers
 {
-    public class FileHelper
+    public static class FileHelper
     {
-        private readonly string _connectionString;
-        private readonly string _shareName;
-        private readonly string _destFilePath;
-        private readonly string _pattern;
-        private readonly ShareFileClient _file;
-        public FileHelper(ShareFileClient client, string connectionString, string shareName, string destFilePath, string pattern)
-        {
-            _file = client;
-            _connectionString = connectionString;
-            _shareName = shareName;
-            _destFilePath = destFilePath;
-            _pattern = pattern;
-        }
-
-        public async Task ProcessFile()
+        public static async Task ProcessFile(ShareFileClient file, string connectionString, string shareName, string destFilePath, string pattern)
         {
             try
             {
                 string line;
                 bool isMatch = false;
                 //read file line by line
-                var reader = new StreamReader(await _file.OpenReadAsync());                
+                var reader = new StreamReader(await file.OpenReadAsync());                
                 while ((line = reader.ReadLine()) != null && !isMatch)
                 {
-                    isMatch = line.IsPatternMatch(_pattern);
+                    isMatch = line.IsPatternMatch(pattern);
                 }
                 reader.Close();
                 if (isMatch)
-                    await CopyFileAsync(_file, _connectionString, _shareName, _destFilePath);
+                    await CopyFileAsync(file, connectionString, shareName, destFilePath);
 
-                await DeleteFileAsync(_file);
+                await DeleteFileAsync(file);
             }
             catch (Exception e)
             {
-                throw new Exception($"Error while processing file {_file.Name}. Error: {e.Message}. Stack trace: {e.StackTrace}");
+                throw new Exception($"Error while processing file {file.Name}. Error: {e.Message}. Stack trace: {e.StackTrace}");
             }
         }
 
-        private async Task DeleteFileAsync(ShareFileClient file)
+        private static async Task DeleteFileAsync(ShareFileClient file)
         {            
             await file.DeleteIfExistsAsync();
             Console.WriteLine($"{file.Uri} deleted.");
         }
 
-        private async Task CopyFileAsync(ShareFileClient file, string connectionString, string shareName, string destFilePath)
+        private static async Task CopyFileAsync(ShareFileClient file, string connectionString, string shareName, string destFilePath)
         {
             // Get a reference to the destination file
             var destFile = new ShareFileClient(connectionString, shareName, string.Format("{0}/{1}", destFilePath, file.Name));

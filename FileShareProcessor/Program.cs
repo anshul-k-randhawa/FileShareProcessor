@@ -13,11 +13,9 @@ namespace FileShareConsole
             var directoryName = ConfigurationManager.AppSettings["DirectoryName"];
             var pattern = ConfigurationManager.AppSettings["Pattern"];
             var destFilePath = ConfigurationManager.AppSettings["DestinationFilePath"];
-            
-            var processor = new Processor(connectionString, shareName, directoryName, destFilePath, pattern);
             try
             {
-                var result = processor.ProcessDirectoryAsync();
+                var result = Processor.ProcessDirectoryAsync(connectionString, shareName, directoryName, destFilePath, pattern);
                 //do some other task
                 result.Wait();
             }
